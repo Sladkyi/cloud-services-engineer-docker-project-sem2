@@ -76,6 +76,6 @@ docker run --rm aquasec/trivy:latest image <user>/docker-project-nginx:latest
 
 | Переменная        | По умолчанию | Описание                              |
 |-------------------|--------------|---------------------------------------|
-| `DOCKER_USER`     | `sladkyi`    | Префикс имени образа в Docker Hub     |
+| `DOCKER_USER`     | `fetbubun`    | Префикс имени образа в Docker Hub     |
 | `NGINX_HOST_PORT` | `80`         | Порт хоста для nginx                  |
 | `VUE_APP_API_URL` | `/api`       | URL API, запекается в SPA при сборке  |

@@ -2,7 +2,7 @@ name: momo-store
 
 services:
   backend:
-    image: ${DOCKER_USER:-sladkyi}/docker-project-backend:latest
+    image: ${DOCKER_USER:-fetbubun}/docker-project-backend:latest
     build:
       context: ./backend
     expose:
@@ -32,7 +32,7 @@ services:
     profiles: ["dev", "prod"]
 
   frontend:
-    image: ${DOCKER_USER:-sladkyi}/docker-project-frontend:latest
+    image: ${DOCKER_USER:-fetbubun}/docker-project-frontend:latest
     build:
       context: ./frontend
       args:
@@ -63,7 +63,7 @@ services:
     profiles: ["dev", "prod"]
 
   nginx:
-    image: ${DOCKER_USER:-sladkyi}/docker-project-nginx:latest
+    image: ${DOCKER_USER:-fetbubun}/docker-project-nginx:latest
     build:
       context: ./nginx
     ports:
