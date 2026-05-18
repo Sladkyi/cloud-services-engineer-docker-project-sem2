@@ -9,11 +9,20 @@ services:
       - "8081"
     networks:
       - backend_net
+    volumes:
+      - backend_data:/app/data
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     read_only: true
+    tmpfs:
+      - /tmp:rw,size=16m
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     deploy:
       resources:
@@ -62,6 +71,12 @@ services:
     networks:
       - frontend_net
       - backend_net
+    volumes:
+      - nginx_logs:/var/log/nginx
+    secrets:
+      - source: docker_password
+        target: docker_password
+        mode: 0400
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -70,11 +85,12 @@ services:
     tmpfs:
       - /tmp:rw,size=16m
       - /var/cache/nginx:rw,size=16m
+      - /var/log/nginx:rw,size=16m
     depends_on:
       frontend:
         condition: service_healthy
       backend:
-        condition: service_started
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 30s
@@ -88,8 +104,16 @@ services:
           memory: 64M
     profiles: ["dev", "prod"]
 
+volumes:
+  backend_data:
+  nginx_logs:
+
 networks:
   frontend_net:
     driver: bridge
   backend_net:
     driver: bridge
+
+secrets:
+  docker_password:
+    file: ./secrets/docker_password.txt
