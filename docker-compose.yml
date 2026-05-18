@@ -19,10 +19,11 @@ services:
     tmpfs:
       - /tmp:rw,size=16m
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
-      interval: 30s
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health || exit 1"]
+      interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
     deploy:
       resources:
@@ -89,7 +90,7 @@ services:
       frontend:
         condition: service_healthy
       backend:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health || exit 1"]
       interval: 30s
