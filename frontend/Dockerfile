@@ -9,6 +9,7 @@ COPY . .
 
 ARG VUE_APP_API_URL=/api
 ENV VUE_APP_API_URL=${VUE_APP_API_URL}
+ENV NODE_OPTIONS=--openssl-legacy-provider
 
 RUN npx vue-cli-service build --public-path ''
 
