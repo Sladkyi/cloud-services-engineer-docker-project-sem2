@@ -85,7 +85,6 @@ services:
     tmpfs:
       - /tmp:rw,size=16m
       - /var/cache/nginx:rw,size=16m
-      - /var/log/nginx:rw,size=16m
     depends_on:
       frontend:
         condition: service_healthy
