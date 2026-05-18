@@ -7,7 +7,5 @@
 Dockerfile
 .dockerignore
 *_test.go
-**/mock
-**/fake
 vendor
 *.log
