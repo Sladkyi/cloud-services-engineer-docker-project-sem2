@@ -4,19 +4,19 @@
 
 ## Сервисы
 
-- `backend` — Go API на порту 8081 (distroless, non-root)
+- `backend` — Go API, слушает 8081
 - `frontend` — Vue SPA, nginx-unprivileged на 8080
-- `nginx` — reverse-proxy и балансировщик на 80
+- `nginx` — reverse-proxy и балансировщик, наружу на 80
 
 ## Запуск
 
-Локально:
+Локально с билдом:
 
 ```bash
 docker compose --profile dev up --build
 ```
 
-С образами из Docker Hub:
+С готовыми образами из Docker Hub:
 
 ```bash
 DOCKER_USER=<your_user> docker compose --profile prod up -d
@@ -30,30 +30,52 @@ DOCKER_USER=<your_user> docker compose --profile prod up -d
 docker compose --profile dev up --build --scale backend=3
 ```
 
-nginx балансирует запросы между репликами через upstream.
+nginx балансирует через `upstream backend_upstream` (round-robin).
+
+## Образы
+
+Все образы собраны через multi-stage:
+
+- `backend` — `golang:1.22-alpine` → `alpine:3.20` (~20 МБ)
+- `frontend` — `node:18-alpine` → `nginxinc/nginx-unprivileged:alpine` (~50 МБ)
+- `nginx` — `nginxinc/nginx-unprivileged:alpine` (~50 МБ)
 
 ## Безопасность
 
-- multi-stage сборки, минимальные базовые образы (distroless, nginx-unprivileged)
+- multi-stage сборки, минимальные базовые образы
 - non-root пользователи во всех контейнерах
-- `read_only`, `cap_drop: ALL`, `no-new-privileges`
+- `read_only: true`, `cap_drop: ALL`, `no-new-privileges:true`
 - `tmpfs` для временных каталогов
 - лимиты CPU и памяти
-- изолированные сети (frontend и backend)
-- секреты в GitHub Secrets
+- изолированные сети `frontend_net` и `backend_net`
+- `.dockerignore` исключает мусор из контекста сборки
+- секреты через Docker Secrets и GitHub Secrets
+
+## Volumes
+
+- `backend_data` — данные бэкенда
+- `nginx_logs` — логи nginx-роутера
+
+## Secrets
+
+В compose используется Docker Secret `docker_password`, файл `./secrets/docker_password.txt` подгружается в контейнер `nginx` как `/run/secrets/docker_password`. Файл закоммичен с плейсхолдером, реальные значения в репо не лежат.
+
+В CI/CD секреты `DOCKER_USER` и `DOCKER_PASSWORD` хранятся в GitHub Secrets.
 
 ## Trivy
 
-В CI запускается `trivy-scan` после пуша в Docker Hub. Локально:
+В CI после пуша образов запускается job `trivy-scan`. Локально:
 
 ```bash
 docker run --rm aquasec/trivy:latest image <user>/docker-project-backend:latest
+docker run --rm aquasec/trivy:latest image <user>/docker-project-frontend:latest
+docker run --rm aquasec/trivy:latest image <user>/docker-project-nginx:latest
 ```
 
 ## Переменные
 
-| Переменная        | Значение по умолчанию |
-|-------------------|-----------------------|
-| `DOCKER_USER`     | `sladkyi`             |
-| `NGINX_HOST_PORT` | `80`                  |
-| `VUE_APP_API_URL` | `/api`                |
+| Переменная        | По умолчанию | Описание                              |
+|-------------------|--------------|---------------------------------------|
+| `DOCKER_USER`     | `sladkyi`    | Префикс имени образа в Docker Hub     |
+| `NGINX_HOST_PORT` | `80`         | Порт хоста для nginx                  |
+| `VUE_APP_API_URL` | `/api`       | URL API, запекается в SPA при сборке  |
